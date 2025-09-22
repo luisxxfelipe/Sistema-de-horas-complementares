@@ -10,6 +10,8 @@ import AdminPanel from "./pages/AdminPanel";
 import { AuthProvider } from "./context/AuthContext";
 import AdminRoute from "./routes/AdminRoute";
 import { useAuth } from "./hooks/useAuth";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
 import "./assets/styles/index.css";
 
 const PrivateRoute = ({ children }) => {
@@ -74,14 +76,21 @@ const Root = () => (
 // Componente separado para garantir que o redirecionamento ocorra corretamente
 const RedirectByRole = () => {
   const { user, role } = useAuth();
+  const navigate = useNavigate();
 
-  if (!user) return <Navigate to="/login" />; // Se não tem user, manda para login
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!user) {
+        navigate("/login");
+      } else if (role === "admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+    }, 2000);
 
-  return role === "admin" ? (
-    <Navigate to="/admin-dashboard" />
-  ) : (
-    <Navigate to="/dashboard" />
-  );
+    return () => clearTimeout(timer);
+  }, [user, role, navigate]);
 };
 
 ReactDOM.createRoot(document.getElementById("root")).render(<Root />);

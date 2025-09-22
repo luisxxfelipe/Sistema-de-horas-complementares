@@ -181,13 +181,11 @@ const ActivityForm = ({ onActivityAdded }) => {
           const { data, error } = await supabase.from("activity_types").select("*").eq("id", formData.group).single()
 
           if (error) {
-            console.error("Erro ao buscar detalhes do grupo:", error)
             return
           }
 
           setCategoryDetails(data)
         } catch (error) {
-          console.error("Erro ao processar requisição:", error)
         }
       } else {
         setCategoryDetails(null)

@@ -1,5 +1,42 @@
 // Função para criar conta (Signup)
 import { supabase } from "./supabase";
+import { validatePassword, validateEmail } from "../lib/validation";
+
+// Constantes para rate limiting
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutos em milissegundos
+
+// Armazenamento local para controle de tentativas de login
+const getLoginAttempts = () => {
+  const attempts = localStorage.getItem("loginAttempts");
+  return attempts ? JSON.parse(attempts) : { count: 0, timestamp: Date.now() };
+};
+
+const updateLoginAttempts = (success) => {
+  if (success) {
+    localStorage.removeItem("loginAttempts");
+  } else {
+    const attempts = getLoginAttempts();
+    attempts.count += 1;
+    attempts.timestamp = Date.now();
+    localStorage.setItem("loginAttempts", JSON.stringify(attempts));
+  }
+};
+
+const isAccountLocked = () => {
+  const attempts = getLoginAttempts();
+  if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
+    const timeElapsed = Date.now() - attempts.timestamp;
+    if (timeElapsed < LOCKOUT_TIME) {
+      return true;
+    } else {
+      // Reset após o período de bloqueio
+      localStorage.removeItem("loginAttempts");
+      return false;
+    }
+  }
+  return false;
+};
 
 // Função para criar conta (Signup)
 export const signup = async (
@@ -12,10 +49,29 @@ export const signup = async (
   role = "aluno" // Define "aluno" como padrão
 ) => {
   try {
+    // Validações
+    if (!validateEmail(email)) {
+      return { success: false, message: "Email inválido" };
+    }
+
+    const passwordValidation = validatePassword(senha);
+    if (!passwordValidation.isValid) {
+      return { 
+        success: false, 
+        message: "Senha inválida", 
+        errors: passwordValidation.errors 
+      };
+    }
+
     // Criar usuário no Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email: String(email).trim(),
       password: String(senha).trim(),
+      options: {
+        data: {
+          role: role
+        }
+      }
     });
 
     if (error) {
@@ -38,7 +94,9 @@ export const signup = async (
         matricula: String(matricula).trim(),
         turno: String(turno).trim(),
         semestre_entrada: Number(semestre_entrada),
-        role: String(role).trim(), // Define a role do usuário
+        role: String(role).trim(),
+        created_at: new Date().toISOString(),
+        last_login: null
       },
     ]);
 
@@ -54,6 +112,7 @@ export const signup = async (
 
     return { success: true, user: data.user };
   } catch (error) {
+    console.error("Erro no signup:", error);
     return { success: false, message: "Erro inesperado. Tente novamente." };
   }
 };
@@ -61,14 +120,26 @@ export const signup = async (
 // Função para login usando Supabase Auth
 export const login = async (email, senha) => {
   try {
+    // Verificar se a conta está bloqueada
+    if (isAccountLocked()) {
+      return { 
+        success: false, 
+        message: "Conta temporariamente bloqueada. Tente novamente mais tarde." 
+      };
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: String(email).trim(),
       password: String(senha).trim(),
     });
 
     if (error) {
+      updateLoginAttempts(false);
       return { success: false, message: error.message };
     }
+
+    // Login bem sucedido
+    updateLoginAttempts(true);
 
     // Buscar a role do usuário no banco de dados
     const { data: userData, error: userError } = await supabase
@@ -81,14 +152,21 @@ export const login = async (email, senha) => {
       return { success: false, message: userError.message };
     }
 
+    // Atualizar último login
+    await supabase
+      .from("users")
+      .update({ last_login: new Date().toISOString() })
+      .eq("email", email);
+
     // Salva o token de autenticação e a role no localStorage
     if (data?.session?.access_token) {
       localStorage.setItem("authToken", data.session.access_token);
       localStorage.setItem("userRole", userData?.role || "aluno");
     }
 
-    return { success: true, user: data.user };
+    return { success: true, user: data.user, role: userData?.role || "aluno" };
   } catch (error) {
+    console.error("Erro no login:", error);
     return { success: false, message: "Erro inesperado. Tente novamente." };
   }
 };
@@ -105,11 +183,11 @@ export const logout = async () => {
 
     return { success: true };
   } catch (error) {
+    console.error("Erro no logout:", error);
     return { success: false, message: error.message };
   }
 };
 
-// Função para obter usuário autenticado
 // Função para obter usuário autenticado e garantir que a role está atualizada
 export const getUser = async () => {
   try {
@@ -135,6 +213,7 @@ export const getUser = async () => {
 
     return { success: true, user: data.user, role: userRole };
   } catch (error) {
+    console.error("Erro ao obter usuário:", error);
     return { success: false, message: "Erro inesperado. Tente novamente." };
   }
 };

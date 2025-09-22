@@ -12,11 +12,6 @@ export const generatePDF = async (userData, activities, tipoAtividade) => {
 
   // Garantir que o semestre seja tratado corretamente
   const semestre = userData?.semestre_entrada || "Não informado";
-
-  // Log de dados para depuração
-  console.log("Dados do usuário:", userData);
-  console.log("Atividades:", activities);
-
   // Recupera os nomes das atividades a partir do tipo_id
   const activityTypes = await Promise.all(
     activities.map(async (act) => {

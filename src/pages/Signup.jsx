@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import { supabase } from "../services/supabase"
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "../services/supabase";
 import {
   TextField,
   Button,
@@ -23,7 +23,7 @@ import {
   Divider,
   InputAdornment,
   IconButton,
-} from "@mui/material"
+} from "@mui/material";
 import {
   School as SchoolIcon,
   PersonAdd as PersonAddIcon,
@@ -39,8 +39,8 @@ import {
   LocationOn as LocationIcon,
   Schedule as ScheduleIcon,
   Today as CalendarIcon,
-} from "@mui/icons-material"
-import { styled } from "@mui/material/styles"
+} from "@mui/icons-material";
+import { styled } from "@mui/material/styles";
 
 // Componentes estilizados
 const SignupPaper = styled(Paper)(({ theme }) => ({
@@ -49,13 +49,13 @@ const SignupPaper = styled(Paper)(({ theme }) => ({
   boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
   backdropFilter: "blur(8px)",
   border: "1px solid rgba(255, 255, 255, 0.18)",
-}))
+}));
 
 const LogoContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   justifyContent: "center",
   marginBottom: theme.spacing(3),
-}))
+}));
 
 const LogoCircle = styled(Box)(({ theme }) => ({
   backgroundColor: "#fff",
@@ -65,7 +65,7 @@ const LogoCircle = styled(Box)(({ theme }) => ({
   justifyContent: "center",
   alignItems: "center",
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-}))
+}));
 
 const StyledLink = styled(Link)(({ theme }) => ({
   color: theme.palette.primary.main,
@@ -74,7 +74,7 @@ const StyledLink = styled(Link)(({ theme }) => ({
   "&:hover": {
     textDecoration: "underline",
   },
-}))
+}));
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -86,32 +86,36 @@ const Signup = () => {
     semestreEntrada: "",
     course_id: "",
     unit_id: "",
-  })
+  });
 
-  const [courses, setCourses] = useState([])
-  const [units, setUnits] = useState([])
-  const [filteredUnits, setFilteredUnits] = useState([])
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [activeStep, setActiveStep] = useState(0)
-  const [showPassword, setShowPassword] = useState(false)
-  const navigate = useNavigate()
+  const [courses, setCourses] = useState([]);
+  const [units, setUnits] = useState([]);
+  const [filteredUnits, setFilteredUnits] = useState([]);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
-  const steps = ["Informações Pessoais", "Dados Acadêmicos"]
+  const steps = ["Informações Pessoais", "Dados Acadêmicos"];
 
   // Buscar cursos e unidades
   useEffect(() => {
     const fetchData = async () => {
-      const { data: coursesData, error: coursesError } = await supabase.from("courses").select("id, nome")
+      const { data: coursesData, error: coursesError } = await supabase
+        .from("courses")
+        .select("id, nome");
 
-      const { data: unitsData, error: unitsError } = await supabase.from("units").select("id, nome")
+      const { data: unitsData, error: unitsError } = await supabase
+        .from("units")
+        .select("id, nome");
 
-      if (!coursesError) setCourses(coursesData)
-      if (!unitsError) setUnits(unitsData)
-    }
+      if (!coursesError) setCourses(coursesData);
+      if (!unitsError) setUnits(unitsData);
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   // Filtrar unidades com base no curso selecionado
   useEffect(() => {
@@ -120,112 +124,119 @@ const Signup = () => {
         const { data, error } = await supabase
           .from("course_units")
           .select("unit_id")
-          .eq("course_id", formData.course_id)
+          .eq("course_id", formData.course_id);
 
         if (!error) {
-          const unitIds = data.map((item) => item.unit_id)
-          const filtered = units.filter((unit) => unitIds.includes(unit.id))
-          setFilteredUnits(filtered)
+          const unitIds = data.map((item) => item.unit_id);
+          const filtered = units.filter((unit) => unitIds.includes(unit.id));
+          setFilteredUnits(filtered);
         }
-      }
+      };
 
-      fetchCourseUnits()
+      fetchCourseUnits();
     } else {
-      setFilteredUnits([])
+      setFilteredUnits([]);
     }
-  }, [formData.course_id, units])
+  }, [formData.course_id, units]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target
+    const { name, value } = event.target;
 
     if (name === "matricula") {
       // Remove tudo que não for número
-      let numericValue = value.replace(/\D/g, "")
+      let numericValue = value.replace(/\D/g, "");
 
       // Adiciona o hífen automaticamente no formato XX-XXXXX
       if (numericValue.length > 2) {
-        numericValue = `${numericValue.slice(0, 2)}-${numericValue.slice(2, 7)}`
+        numericValue = `${numericValue.slice(0, 2)}-${numericValue.slice(
+          2,
+          7
+        )}`;
       }
 
-      setFormData((prev) => ({ ...prev, [name]: numericValue }))
+      setFormData((prev) => ({ ...prev, [name]: numericValue }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }))
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
-  }
+  };
 
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword)
-  }
+    setShowPassword(!showPassword);
+  };
 
   const validateStep = (step) => {
-    setError("")
+    setError("");
 
     if (step === 0) {
       if (!formData.nome.trim()) {
-        setError("Nome é obrigatório")
-        return false
+        setError("Nome é obrigatório");
+        return false;
       }
       if (!formData.email.trim()) {
-        setError("E-mail é obrigatório")
-        return false
+        setError("E-mail é obrigatório");
+        return false;
       }
 
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@discente\.uemg\.br$/
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@(discente\.)?uemg\.br$/;
       if (!emailRegex.test(formData.email)) {
-        setError("O e-mail deve ser institucional (@discente.uemg.br)")
-        return false
+        setError(
+          "O e-mail deve ser institucional (@discente.uemg.br ou @uemg.br)"
+        );
+        return false;
       }
 
       if (!formData.senha || formData.senha.length < 6) {
-        setError("A senha deve ter pelo menos 6 caracteres")
-        return false
+        setError("A senha deve ter pelo menos 6 caracteres");
+        return false;
       }
     } else if (step === 1) {
       if (!formData.matricula.trim()) {
-        setError("Matrícula é obrigatória")
-        return false
+        setError("Matrícula é obrigatória");
+        return false;
       }
       if (!formData.course_id) {
-        setError("Curso é obrigatório")
-        return false
+        setError("Curso é obrigatório");
+        return false;
       }
       if (!formData.unit_id) {
-        setError("Unidade é obrigatória")
-        return false
+        setError("Unidade é obrigatória");
+        return false;
       }
       if (!formData.turno) {
-        setError("Turno é obrigatório")
-        return false
+        setError("Turno é obrigatório");
+        return false;
       }
 
-      const semestreRegex = /^\d{4}\/[1-2]$/
+      const semestreRegex = /^\d{4}\/[1-2]$/;
       if (!semestreRegex.test(formData.semestreEntrada.trim())) {
-        setError("Semestre deve estar no formato correto (ex: 2024/1 ou 2024/2)")
-        return false
+        setError(
+          "Semestre deve estar no formato correto (ex: 2024/1 ou 2024/2)"
+        );
+        return false;
       }
     }
 
-    return true
-  }
+    return true;
+  };
 
   const handleNext = () => {
     if (validateStep(activeStep)) {
-      setActiveStep((prevStep) => prevStep + 1)
+      setActiveStep((prevStep) => prevStep + 1);
     }
-  }
+  };
 
   const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1)
-  }
+    setActiveStep((prevStep) => prevStep - 1);
+  };
 
   const handleSubmit = async (event) => {
-    event.preventDefault()
+    event.preventDefault();
 
     if (!validateStep(activeStep)) {
-      return
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     const userData = {
       nome: formData.nome.trim(),
@@ -237,20 +248,20 @@ const Signup = () => {
       course_id: formData.course_id || null,
       unit_id: formData.unit_id || null,
       role: "aluno",
-    }
+    };
 
     try {
       // Criar usuário no Supabase Auth
       const { data, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.senha,
-      })
+      });
 
       if (authError || !data?.user) {
-        throw new Error("Erro ao criar usuário no Supabase Auth.")
+        throw new Error("Erro ao criar usuário no Supabase Auth.");
       }
 
-      const userId = data.user.id
+      const userId = data.user.id;
 
       // Inserir usuário na tabela `users`
       const { error: userInsertError } = await supabase.from("users").insert([
@@ -264,38 +275,42 @@ const Signup = () => {
           unit_id: userData.unit_id,
           role: "aluno",
         },
-      ])
+      ]);
 
       if (userInsertError) {
-        throw new Error("Erro ao salvar dados do usuário.")
+        throw new Error("Erro ao salvar dados do usuário.");
       }
 
       // Inserir relação na tabela `user_courses`
       if (userData.course_id) {
-        const { error: courseError } = await supabase.from("user_courses").insert([
-          {
-            user_id: userId,
-            course_id: userData.course_id,
-            matricula: userData.matricula,
-            turno: userData.turno,
-            semestre_entrada: userData.semestreEntrada,
-            unit_id: userData.unit_id,
-          },
-        ])
+        const { error: courseError } = await supabase
+          .from("user_courses")
+          .insert([
+            {
+              user_id: userId,
+              course_id: userData.course_id,
+              matricula: userData.matricula,
+              turno: userData.turno,
+              semestre_entrada: userData.semestreEntrada,
+              unit_id: userData.unit_id,
+            },
+          ]);
 
         if (courseError) {
-          throw new Error("Erro ao associar usuário ao curso.")
+          throw new Error(
+            `Erro ao associar usuário ao curso: ${courseError.message}`
+          );
         }
       }
 
-      alert("Conta criada com sucesso!")
-      navigate("/login")
+      alert("Conta criada com sucesso!");
+      navigate("/login");
     } catch (error) {
-      setError(error.message)
+      setError(error.message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Box
@@ -316,10 +331,20 @@ const Signup = () => {
         </LogoContainer>
 
         <SignupPaper elevation={0}>
-          <Typography variant="h4" align="center" fontWeight="bold" gutterBottom>
+          <Typography
+            variant="h4"
+            align="center"
+            fontWeight="bold"
+            gutterBottom
+          >
             Cadastro de Aluno
           </Typography>
-          <Typography variant="body2" align="center" color="textSecondary" sx={{ mb: 3 }}>
+          <Typography
+            variant="body2"
+            align="center"
+            color="textSecondary"
+            sx={{ mb: 3 }}
+          >
             Preencha os dados abaixo para criar sua conta
           </Typography>
 
@@ -337,7 +362,11 @@ const Signup = () => {
             </Alert>
           )}
 
-          <form onSubmit={activeStep === steps.length - 1 ? handleSubmit : handleNext}>
+          <form
+            onSubmit={
+              activeStep === steps.length - 1 ? handleSubmit : handleNext
+            }
+          >
             {activeStep === 0 ? (
               <Grid container spacing={3}>
                 <Grid item xs={12}>
@@ -403,7 +432,11 @@ const Signup = () => {
                             onClick={togglePasswordVisibility}
                             edge="end"
                           >
-                            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                            {showPassword ? (
+                              <VisibilityOffIcon />
+                            ) : (
+                              <VisibilityIcon />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),
@@ -480,7 +513,12 @@ const Signup = () => {
                   </FormControl>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <FormControl fullWidth required variant="outlined" disabled={!formData.course_id}>
+                  <FormControl
+                    fullWidth
+                    required
+                    variant="outlined"
+                    disabled={!formData.course_id}
+                  >
                     <InputLabel id="unidade-label">Unidade</InputLabel>
                     <Select
                       labelId="unidade-label"
@@ -502,7 +540,9 @@ const Signup = () => {
                         ))
                       ) : (
                         <MenuItem disabled>
-                          {formData.course_id ? "Nenhuma unidade disponível" : "Selecione um curso primeiro"}
+                          {formData.course_id
+                            ? "Nenhuma unidade disponível"
+                            : "Selecione um curso primeiro"}
                         </MenuItem>
                       )}
                     </Select>
@@ -559,7 +599,10 @@ const Signup = () => {
                         py: 1.5,
                         borderColor: "#3C6178",
                         color: "#3C6178",
-                        "&:hover": { borderColor: "#2e4f5e", backgroundColor: "rgba(60, 97, 120, 0.04)" },
+                        "&:hover": {
+                          borderColor: "#2e4f5e",
+                          backgroundColor: "rgba(60, 97, 120, 0.04)",
+                        },
                         borderRadius: 2,
                       }}
                       startIcon={<ArrowBackIcon />}
@@ -578,7 +621,13 @@ const Signup = () => {
                         "&:hover": { backgroundColor: "#2e4f5e" },
                         borderRadius: 2,
                       }}
-                      startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <PersonAddIcon />}
+                      startIcon={
+                        isLoading ? (
+                          <CircularProgress size={20} color="inherit" />
+                        ) : (
+                          <PersonAddIcon />
+                        )
+                      }
                     >
                       {isLoading ? "Cadastrando..." : "Cadastrar"}
                     </Button>
@@ -598,8 +647,7 @@ const Signup = () => {
         </SignupPaper>
       </Container>
     </Box>
-  )
-}
+  );
+};
 
-export default Signup
-
+export default Signup;

@@ -202,9 +202,6 @@
                 alt="Logo UEMG"
                 style={{ maxHeight: 40, marginRight: 12 }}
               />
-              <Typography variant="h6" fontWeight="bold" noWrap>
-                HorasComp
-              </Typography>
             </Box>
           )}
           <IconButton onClick={handleDrawerToggle} sx={{ color: "#FFF" }}>
@@ -411,9 +408,6 @@
                   alt="Logo UEMG"
                   style={{ maxHeight: 40, marginRight: 12 }}
                 />
-                <Typography variant="h6" fontWeight="bold" noWrap>
-                  HorasComp
-                </Typography>
               </Box>
             </Toolbar>
           </AppBar>

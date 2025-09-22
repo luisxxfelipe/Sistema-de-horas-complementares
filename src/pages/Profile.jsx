@@ -158,7 +158,6 @@ const Profile = () => {
           avatar_url: profileData.url_profile || null, // Corrigido para usar url_profile
         });
       } catch (error) {
-        console.error("Erro ao carregar dados do usuário:", error);
         setSnackbar({
           open: true,
           message: "Erro ao carregar dados do usuário",
@@ -228,7 +227,6 @@ const Profile = () => {
       });
       setEditMode(false);
     } catch (error) {
-      console.error("Erro ao atualizar perfil:", error);
       setSnackbar({
         open: true,
         message: "Erro ao atualizar perfil",
@@ -260,7 +258,6 @@ const Profile = () => {
         severity: "success",
       });
     } catch (error) {
-      console.error("Erro ao atualizar preferências:", error);
       setSnackbar({
         open: true,
         message: "Erro ao atualizar preferências",
@@ -302,7 +299,6 @@ const Profile = () => {
         confirmPassword: "",
       });
     } catch (error) {
-      console.error("Erro ao atualizar senha:", error);
       setSnackbar({
         open: true,
         message: "Erro ao atualizar senha",
@@ -365,7 +361,6 @@ const Profile = () => {
         severity: "success",
       });
     } catch (error) {
-      console.error("Erro ao fazer upload do avatar:", error);
       setSnackbar({
         open: true,
         message: "Erro ao atualizar avatar",
@@ -387,6 +382,7 @@ const Profile = () => {
           flexGrow: 1,
           overflow: "auto",
           minHeight: "100vh",
+          pt: { xs: 8, sm: 0 }, // <- aqui adiciona espaço no topo no mobile
         }}
       >
         {/* Header */}

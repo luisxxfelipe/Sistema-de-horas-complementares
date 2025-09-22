@@ -121,7 +121,6 @@ const SecretariaDashboard = () => {
       if (error) throw error;
       setActivities(data || []);
     } catch (error) {
-      console.error("Erro ao buscar atividades:", error);
       setSnackbar({
         open: true,
         message: "Erro ao carregar atividades",
@@ -201,7 +200,6 @@ const SecretariaDashboard = () => {
 
       handleCloseDialog();
     } catch (err) {
-      console.error("Erro ao aprovar atividade:", err);
       setSnackbar({
         open: true,
         message: "Erro ao aprovar a atividade",
@@ -243,7 +241,6 @@ const SecretariaDashboard = () => {
 
       handleCloseDialog();
     } catch (err) {
-      console.error("Erro ao rejeitar atividade:", err);
       setSnackbar({
         open: true,
         message: "Erro ao rejeitar a atividade",

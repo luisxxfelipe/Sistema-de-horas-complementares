@@ -1,22 +1,34 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { supabase } from "../services/supabase"
-import ActivityList from "../components/ActivityList"
-import Sidebar from "../components/Sidebar"
-import Reports from "../components/Reports" 
-import { useNavigate } from "react-router-dom"
-import { useLocation } from "react-router-dom"
-import { Box, Container, Typography, Tabs, Tab, Card, CardContent, CardHeader, Grid, Button } from "@mui/material"
+import { useState, useEffect } from "react";
+import { supabase } from "../services/supabase";
+import ActivityList from "../components/ActivityList";
+import Sidebar from "../components/Sidebar";
+import Reports from "../components/Reports";
+import Toolbar from "@mui/material/Toolbar";
+import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import {
+  Box,
+  Container,
+  Typography,
+  Tabs,
+  Tab,
+  Card,
+  CardContent,
+  CardHeader,
+  Grid,
+  Button,
+} from "@mui/material";
 import {
   Add as AddIcon,
   AccessTime as ClockIcon,
   CheckCircle as CheckCircleIcon,
   HourglassEmpty as PendingIcon,
   Cancel as CancelIcon,
-} from "@mui/icons-material"
-import { styled } from "@mui/material/styles"
-import LinearProgress from "@mui/material/LinearProgress"
+} from "@mui/icons-material";
+import { styled } from "@mui/material/styles";
+import LinearProgress from "@mui/material/LinearProgress";
 
 // Componentes estilizados
 const StyledTabs = styled(Tabs)(({ theme }) => ({
@@ -24,7 +36,7 @@ const StyledTabs = styled(Tabs)(({ theme }) => ({
   "& .MuiTabs-indicator": {
     backgroundColor: "#3C6178",
   },
-}))
+}));
 
 const StyledTab = styled(Tab)(({ theme }) => ({
   textTransform: "none",
@@ -35,7 +47,7 @@ const StyledTab = styled(Tab)(({ theme }) => ({
     color: "#3C6178",
     fontWeight: theme.typography.fontWeightMedium,
   },
-}))
+}));
 
 const StatsCard = styled(Card)(({ theme }) => ({
   height: "100%",
@@ -46,60 +58,60 @@ const StatsCard = styled(Card)(({ theme }) => ({
     transform: "translateY(-5px)",
     boxShadow: theme.shadows[8],
   },
-}))
+}));
 
 const Dashboard = () => {
-  const location = useLocation()
-  const [activities, setActivities] = useState([])
-  const [userId, setUserId] = useState(null)
-  const [tabValue, setTabValue] = useState(0)
-  const [tabInitialized, setTabInitialized] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+  const location = useLocation();
+  const [activities, setActivities] = useState([]);
+  const [userId, setUserId] = useState(null);
+  const [tabValue, setTabValue] = useState(0);
+  const [tabInitialized, setTabInitialized] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleTabChange = (event, newValue) => {
-    setTabValue(newValue)
-    navigate(`/dashboard?tab=${newValue}`)
-  }
+    setTabValue(newValue);
+    navigate(`/dashboard?tab=${newValue}`);
+  };
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const tab = Number.parseInt(params.get("tab"), 10)
+    const params = new URLSearchParams(location.search);
+    const tab = Number.parseInt(params.get("tab"), 10);
 
     if (!isNaN(tab)) {
-      setTabValue(tab)
+      setTabValue(tab);
     }
-    setTabInitialized(true)
-  }, [location.search])
+    setTabInitialized(true);
+  }, [location.search]);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser()
-      if (error) return
-      if (data?.user) setUserId(data.user.id)
-    }
-    fetchUser()
-  }, [])
+      const { data, error } = await supabase.auth.getUser();
+      if (error) return;
+      if (data?.user) setUserId(data.user.id);
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser()
+      const { data, error } = await supabase.auth.getUser();
       if (error) {
-        return
+        return;
       }
       if (data?.user) {
-        setUserId(data.user.id)
+        setUserId(data.user.id);
       }
-    }
+    };
 
-    fetchUser()
-  }, [])
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const fetchActivities = async () => {
-      if (!userId) return
+      if (!userId) return;
 
-      setLoading(true)
+      setLoading(true);
 
       const { data, error } = await supabase
         .from("activities")
@@ -115,12 +127,11 @@ const Dashboard = () => {
               nome,
               categories:categoria_id ( nome )
             )
-          `,
+          `
         )
-        .eq("user_id", userId)
+        .eq("user_id", userId);
 
       if (error) {
-        console.error("Erro ao buscar atividades:", error)
       } else {
         setActivities(
           data.map((item) => ({
@@ -130,30 +141,36 @@ const Dashboard = () => {
             externa: item.externa ? "Sim" : "Não",
             status: item.status,
             comentario: item.comentario,
-            categoria: item.activity_types?.categories?.nome || "Não especificado",
+            categoria:
+              item.activity_types?.categories?.nome || "Não especificado",
             grupo: item.activity_types?.nome || "Não especificado",
-          })),
-        )
+          }))
+        );
       }
 
-      setLoading(false)
-    }
+      setLoading(false);
+    };
 
-    fetchActivities()
-  }, [userId])
+    fetchActivities();
+  }, [userId]);
 
   // Calcular estatísticas
-  const totalHoras = activities.reduce((sum, activity) => sum + activity.horas, 0)
-  const aprovadas = activities.filter((a) => a.status === "aprovada").length
-  const pendentes = activities.filter((a) => a.status === "pendente").length
-  const rejeitadas = activities.filter((a) => a.status === "rejeitada").length
+  const totalHoras = activities.reduce(
+    (sum, activity) => sum + activity.horas,
+    0
+  );
+  const aprovadas = activities.filter((a) => a.status === "aprovada").length;
+  const pendentes = activities.filter((a) => a.status === "pendente").length;
+  const rejeitadas = activities.filter((a) => a.status === "rejeitada").length;
 
   // Calcular progresso (exemplo: meta de 100 horas)
-  const meta = 545
-  const progresso = Math.min(Math.round((totalHoras / meta) * 100), 100)
+  const meta = 545;
+  const progresso = Math.min(Math.round((totalHoras / meta) * 100), 100);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#f5f7f9" }}>
+    <Box
+      sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#f5f7f9" }}
+    >
       <Sidebar />
       <Box
         component="main"
@@ -163,6 +180,9 @@ const Dashboard = () => {
           minHeight: "100vh",
         }}
       >
+        {/* Empurra o conteúdo para baixo do AppBar no mobile */}
+        <Toolbar sx={{ display: { xs: "block", sm: "none" } }} />
+
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
           {/* Cabeçalho da página */}
           <Box
@@ -190,7 +210,11 @@ const Dashboard = () => {
           </Box>
 
           {/* Abas */}
-          <StyledTabs value={tabValue} onChange={handleTabChange} aria-label="dashboard tabs">
+          <StyledTabs
+            value={tabValue}
+            onChange={handleTabChange}
+            aria-label="dashboard tabs"
+          >
             <StyledTab label="Visão Geral" />
             <StyledTab label="Atividades" />
             <StyledTab label="Relatórios" />
@@ -229,7 +253,9 @@ const Dashboard = () => {
                     <CardHeader
                       title="Atividades Aprovadas"
                       titleTypographyProps={{ variant: "subtitle2" }}
-                      action={<CheckCircleIcon sx={{ color: "success.main" }} />}
+                      action={
+                        <CheckCircleIcon sx={{ color: "success.main" }} />
+                      }
                       sx={{ pb: 0 }}
                     />
                     <CardContent>
@@ -237,7 +263,12 @@ const Dashboard = () => {
                         {aprovadas}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {aprovadas > 0 ? `${Math.round((aprovadas / activities.length) * 100)}%` : "0%"} do total
+                        {aprovadas > 0
+                          ? `${Math.round(
+                              (aprovadas / activities.length) * 100
+                            )}%`
+                          : "0%"}{" "}
+                        do total
                       </Typography>
                     </CardContent>
                   </StatsCard>
@@ -255,7 +286,12 @@ const Dashboard = () => {
                         {pendentes}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {pendentes > 0 ? `${Math.round((pendentes / activities.length) * 100)}%` : "0%"} do total
+                        {pendentes > 0
+                          ? `${Math.round(
+                              (pendentes / activities.length) * 100
+                            )}%`
+                          : "0%"}{" "}
+                        do total
                       </Typography>
                     </CardContent>
                   </StatsCard>
@@ -273,7 +309,12 @@ const Dashboard = () => {
                         {rejeitadas}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {rejeitadas > 0 ? `${Math.round((rejeitadas / activities.length) * 100)}%` : "0%"} do total
+                        {rejeitadas > 0
+                          ? `${Math.round(
+                              (rejeitadas / activities.length) * 100
+                            )}%`
+                          : "0%"}{" "}
+                        do total
                       </Typography>
                     </CardContent>
                   </StatsCard>
@@ -284,14 +325,22 @@ const Dashboard = () => {
               <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
                 Atividades Recentes
               </Typography>
-              <ActivityList activities={activities.slice(0, 5)} setActivities={setActivities} simplified={true} />
+              <ActivityList
+                activities={activities.slice(0, 5)}
+                setActivities={setActivities}
+                simplified={true}
+              />
             </Box>
           )}
 
           {/* Conteúdo da aba Atividades */}
           {tabValue === 1 && (
             <Box sx={{ pt: 3 }}>
-              <ActivityList activities={activities} setActivities={setActivities} simplified={false} />
+              <ActivityList
+                activities={activities}
+                setActivities={setActivities}
+                simplified={false}
+              />
             </Box>
           )}
 
@@ -304,8 +353,7 @@ const Dashboard = () => {
         </Container>
       </Box>
     </Box>
-  )
-}
+  );
+};
 
-export default Dashboard
-
+export default Dashboard;
