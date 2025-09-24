@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body.dark {
+  @apply bg-gray-900 text-gray-100;
+}
+
+/* Exemplo para Paper/Card do MUI se quiser customizar via CSS (opcional): */
+.dark .MuiPaper-root, .dark .MuiCard-root {
+  background-color: #1a202c !important;
+  color: #f1f1f1 !important;
+}

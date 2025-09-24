@@ -22,7 +22,9 @@ import {
 } from "@mui/material";
 import {
   Add as AddIcon,
-  AccessTime as ClockIcon,
+  School as SchoolIcon,
+  WorkspacePremium as WorkspacePremiumIcon,
+  FactCheck as FactCheckIcon,
   CheckCircle as CheckCircleIcon,
   HourglassEmpty as PendingIcon,
   Cancel as CancelIcon,
@@ -108,18 +110,26 @@ const Dashboard = () => {
     fetchActivities();
   }, []);
 
-  // Calcular estatísticas
-  const totalHoras = activities.reduce(
-    (sum, activity) => sum + activity.horas,
-    0
-  );
+  // Estatísticas
+  const metaExtensao = 405;
+  const metaComplementares = 150;
+  const totalHorasExtensao = activities
+    .filter((a) => a.categoria === "Atividades de Extensão")
+    .reduce((sum, activity) => sum + activity.horas, 0);
+  const totalHorasComplementares = activities
+    .filter((a) => a.categoria && a.categoria.includes("(Complementar)"))
+    .reduce((sum, activity) => sum + activity.horas, 0);
   const aprovadas = activities.filter((a) => a.status === "aprovada").length;
   const pendentes = activities.filter((a) => a.status === "pendente").length;
   const rejeitadas = activities.filter((a) => a.status === "rejeitada").length;
-
-  // Calcular progresso (exemplo: meta de 100 horas)
-  const meta = 545;
-  const progresso = Math.min(Math.round((totalHoras / meta) * 100), 100);
+  const progressoExtensao = Math.min(
+    Math.round((totalHorasExtensao / metaExtensao) * 100),
+    100
+  );
+  const progressoComplementares = Math.min(
+    Math.round((totalHorasComplementares / metaComplementares) * 100),
+    100
+  );
 
   return (
     <Box
@@ -177,99 +187,130 @@ const Dashboard = () => {
           {/* Conteúdo da aba Visão Geral */}
           {tabValue === 0 && (
             <Box sx={{ pt: 3 }}>
-              {/* Cards de estatísticas */}
+              {/* Cards de estatísticas ajustados */}
               <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={12} md={4}>
                   <StatsCard>
                     <CardHeader
-                      title="Total de Horas"
-                      titleTypographyProps={{ variant: "subtitle2" }}
-                      action={<ClockIcon sx={{ color: "text.secondary" }} />}
-                      sx={{ pb: 0 }}
-                    />
-                    <CardContent>
-                      <Typography variant="h4" fontWeight="bold">
-                        {totalHoras}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Meta: {meta} horas
-                      </Typography>
-                      <LinearProgress
-                        variant="determinate"
-                        value={progresso}
-                        sx={{ mt: 1.5, height: 8, borderRadius: 4 }}
-                      />
-                    </CardContent>
-                  </StatsCard>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <StatsCard>
-                    <CardHeader
-                      title="Atividades Aprovadas"
+                      title="Horas de Extensão"
                       titleTypographyProps={{ variant: "subtitle2" }}
                       action={
-                        <CheckCircleIcon sx={{ color: "success.main" }} />
+                        <SchoolIcon sx={{ color: totalHorasExtensao >= metaExtensao ? "#43a047" : "#f57c00" }} />
                       }
                       sx={{ pb: 0 }}
                     />
                     <CardContent>
-                      <Typography variant="h4" fontWeight="bold">
-                        {aprovadas}
+                      <Typography
+                        variant="h3"
+                        fontWeight="bold"
+                        color={totalHorasExtensao >= metaExtensao ? "#43a047" : "#f57c00"}
+                      >
+                        {Number(totalHorasExtensao).toFixed(2)}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {aprovadas > 0
-                          ? `${Math.round(
-                              (aprovadas / activities.length) * 100
-                            )}%`
-                          : "0%"}{" "}
-                        do total
+                        Meta: {metaExtensao} horas
                       </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={progressoExtensao}
+                        sx={{
+                          mt: 2,
+                          height: 8,
+                          borderRadius: 4,
+                          backgroundColor: totalHorasExtensao >= metaExtensao ? "#e8f5e9" : "#fff3e0",
+                          "& .MuiLinearProgress-bar": {
+                            backgroundColor: totalHorasExtensao >= metaExtensao ? "#43a047" : "#f57c00",
+                          },
+                        }}
+                      />
                     </CardContent>
                   </StatsCard>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={12} md={4}>
                   <StatsCard>
                     <CardHeader
-                      title="Atividades Pendentes"
+                      title="Horas Complementares"
                       titleTypographyProps={{ variant: "subtitle2" }}
-                      action={<PendingIcon sx={{ color: "warning.main" }} />}
+                      action={
+                        <WorkspacePremiumIcon sx={{ color: totalHorasComplementares >= metaComplementares ? "#43a047" : "#f57c00" }} />
+                      }
                       sx={{ pb: 0 }}
                     />
                     <CardContent>
-                      <Typography variant="h4" fontWeight="bold">
-                        {pendentes}
+                      <Typography
+                        variant="h3"
+                        fontWeight="bold"
+                        color={totalHorasComplementares >= metaComplementares ? "#43a047" : "#f57c00"}
+                      >
+                        {Number(totalHorasComplementares).toFixed(2)}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {pendentes > 0
-                          ? `${Math.round(
-                              (pendentes / activities.length) * 100
-                            )}%`
-                          : "0%"}{" "}
-                        do total
+                        Meta: {metaComplementares} horas
                       </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={progressoComplementares}
+                        sx={{
+                          mt: 2,
+                          height: 8,
+                          borderRadius: 4,
+                          backgroundColor: totalHorasComplementares >= metaComplementares ? "#e8f5e9" : "#fff3e0",
+                          "& .MuiLinearProgress-bar": {
+                            backgroundColor: totalHorasComplementares >= metaComplementares ? "#43a047" : "#f57c00",
+                          },
+                        }}
+                      />
                     </CardContent>
                   </StatsCard>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={12} md={4}>
                   <StatsCard>
                     <CardHeader
-                      title="Atividades Rejeitadas"
+                      title="Status das Atividades"
                       titleTypographyProps={{ variant: "subtitle2" }}
-                      action={<CancelIcon sx={{ color: "error.main" }} />}
+                      action={<FactCheckIcon sx={{ color: "#3C6178" }} />}
                       sx={{ pb: 0 }}
                     />
                     <CardContent>
-                      <Typography variant="h4" fontWeight="bold">
-                        {rejeitadas}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {rejeitadas > 0
-                          ? `${Math.round(
-                              (rejeitadas / activities.length) * 100
-                            )}%`
-                          : "0%"}{" "}
-                        do total
-                      </Typography>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                      >
+                        <CheckCircleIcon
+                          sx={{ color: "success.main", mr: 1 }}
+                        />
+                        <Typography
+                          variant="body1"
+                          fontWeight="bold"
+                          sx={{ mr: 1 }}
+                        >
+                          Aprovadas:
+                        </Typography>
+                        <Typography variant="body1">{aprovadas}</Typography>
+                      </Box>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                      >
+                        <PendingIcon sx={{ color: "warning.main", mr: 1 }} />
+                        <Typography
+                          variant="body1"
+                          fontWeight="bold"
+                          sx={{ mr: 1 }}
+                        >
+                          Pendentes:
+                        </Typography>
+                        <Typography variant="body1">{pendentes}</Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <CancelIcon sx={{ color: "error.main", mr: 1 }} />
+                        <Typography
+                          variant="body1"
+                          fontWeight="bold"
+                          sx={{ mr: 1 }}
+                        >
+                          Rejeitadas:
+                        </Typography>
+                        <Typography variant="body1">{rejeitadas}</Typography>
+                      </Box>
                     </CardContent>
                   </StatsCard>
                 </Grid>

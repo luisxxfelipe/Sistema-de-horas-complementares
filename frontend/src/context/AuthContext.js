@@ -46,6 +46,15 @@ export const AuthProvider = ({ children }) => {
     // eslint-disable-next-line
   }, [navigate, location, token]);
 
+  useEffect(() => {
+    // Aplica dark mode global quando usuário logado e preferência ativa
+    if (user && user.dark_mode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, [user]);
+
   const handleLogin = (newToken) => {
     localStorage.setItem("token", newToken);
     setToken(newToken);

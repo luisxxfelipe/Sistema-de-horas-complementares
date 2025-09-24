@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getUserProfile, updateUserProfile, updateUserPreferences, updateUserPassword, uploadAvatar } from "../api/users";
+import { getUserProfile, updateUserProfile, updateUserPreferences, updateUserPassword, uploadAvatar, getUserPreferences, getUserLoginLogs } from "../api/users";
 import {
   Box,
   Typography,
@@ -115,7 +115,10 @@ const Profile = () => {
     activityReminders: true,
   });
 
-  // Carregar dados do usuário
+  // Estado para logs de login
+  const [loginLogs, setLoginLogs] = useState([]);
+
+  // Carregar dados do usuário e logs de login
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
@@ -132,6 +135,16 @@ const Profile = () => {
           semestreEntrada: data.semestre_entrada,
           avatar_url: data.url_profile || null,
         });
+        // Buscar preferências reais
+        const pref = await getUserPreferences(token);
+        setPreferences({
+          emailNotifications: !!pref.email_notifications,
+          darkMode: !!pref.dark_mode,
+          activityReminders: !!pref.activity_reminders,
+        });
+        // Buscar logs de login reais
+        const logs = await getUserLoginLogs(token);
+        setLoginLogs(Array.isArray(logs) ? logs : []);
       } catch (error) {
         setSnackbar({
           open: true,
@@ -254,7 +267,7 @@ const Profile = () => {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       }, token);
-      if (result && !result.message) {
+      if (result && result.success) {
         setSnackbar({
           open: true,
           message: "Senha atualizada com sucesso!",
@@ -685,69 +698,40 @@ const Profile = () => {
                           gap: 2,
                         }}
                       >
-                        {[
-                          {
-                            device: "Chrome em Windows",
-                            location: "Belo Horizonte, MG",
-                            date: "Hoje, 14:32",
-                            current: true,
-                          },
-                          {
-                            device: "App Mobile",
-                            location: "Belo Horizonte, MG",
-                            date: "Ontem, 19:45",
-                            current: false,
-                          },
-                          {
-                            device: "Firefox em Windows",
-                            location: "Belo Horizonte, MG",
-                            date: "15/03/2023, 10:12",
-                            current: false,
-                          },
-                        ].map((session, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              p: 1,
-                              borderRadius: 1,
-                              bgcolor: session.current
-                                ? "rgba(76, 175, 80, 0.1)"
-                                : "transparent",
-                            }}
-                          >
-                            <Box>
-                              <Typography variant="body1">
-                                {session.device}
-                                {session.current && (
-                                  <Chip
-                                    label="Sessão Atual"
-                                    size="small"
-                                    color="success"
-                                    sx={{ ml: 1 }}
-                                  />
-                                )}
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {session.location} • {session.date}
-                              </Typography>
+                        {loginLogs.length > 0 ? (
+                          loginLogs.map((log, index) => (
+                            <Box
+                              key={index}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                p: 1,
+                                borderRadius: 1,
+                                bgcolor:
+                                  index % 2 === 0
+                                    ? "rgba(60, 97, 120, 0.04)"
+                                    : "transparent",
+                              }}
+                            >
+                              <Box>
+                                <Typography variant="body1">
+                                  {log.device_info || "Dispositivo desconhecido"}
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                >
+                                  {log.location || log.ip_address || "Localização/IP desconhecido"} • {log.login_time ? new Date(log.login_time).toLocaleString() : ""}
+                                </Typography>
+                              </Box>
                             </Box>
-                            {!session.current && (
-                              <Button
-                                size="small"
-                                color="error"
-                                variant="outlined"
-                              >
-                                Encerrar
-                              </Button>
-                            )}
-                          </Box>
-                        ))}
+                          ))
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            Nenhum log de acesso encontrado
+                          </Typography>
+                        )}
                       </Box>
                     </CardContent>
                   </ProfileCard>

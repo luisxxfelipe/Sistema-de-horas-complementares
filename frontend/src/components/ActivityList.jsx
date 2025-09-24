@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { supabase } from "../supabase"
+import EditActivityModal from "./EditActivityModal"
 import { generatePDF as generatePDFAPI } from "../api/pdf"
-import { deleteActivity } from "../api/activities"
+import { deleteActivity, updateActivity } from "../api/activities"
 
 import {
   Table,
@@ -51,6 +53,8 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
   const [searchTerm, setSearchTerm] = useState("")
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
   const [selectedActivityId, setSelectedActivityId] = useState(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editActivity, setEditActivity] = useState(null)
 
   // Manipuladores de menu
   const handleMenuOpen = (event, activityId) => {
@@ -58,9 +62,74 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
     setSelectedActivityId(activityId)
   }
 
+  // Corrige bug: abre modal direto ao clicar em Editar, sem depender do menu
+  const handleEditClick = () => {
+    const activity = activities.find((a) => a.id === selectedActivityId)
+    if (!activity) return
+    if (activity.status === "aprovada") {
+      setAlertMessage("Não é possível editar uma atividade aprovada.")
+      setAlertSeverity("warning")
+      setOpenSnackbar(true)
+      return
+    }
+    setEditActivity(activity)
+    setEditDialogOpen(true)
+  }
+
   const handleMenuClose = () => {
     setMenuAnchorEl(null)
     setSelectedActivityId(null)
+  }
+
+
+  const handleEditSave = async (form) => {
+    setLoading(true)
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) throw new Error("Usuário não autenticado.")
+      let updates = {
+        descricao: form.descricao,
+        horas: Number(form.horas),
+      }
+      // Se anexou novo arquivo, faz upload e atualiza URL
+      if (form.file) {
+        const fileExt = form.file.name.split('.').pop()
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('certificates')
+          .upload(fileName, form.file)
+        if (uploadError) throw new Error("Erro ao fazer upload do certificado: " + uploadError.message)
+        const { data: publicUrlData } = supabase.storage.from('certificates').getPublicUrl(fileName)
+        updates.certificado_url = publicUrlData.publicUrl
+      }
+      const data = await updateActivity(editActivity.id, updates, token)
+      if (data && data.success !== false) {
+        setActivities((prev) =>
+          prev.map((a) =>
+            a.id === editActivity.id
+              ? { ...a, descricao: updates.descricao, horas: updates.horas, certificado_url: updates.certificado_url || a.certificado_url }
+              : a
+          )
+        )
+        setAlertMessage("Atividade editada com sucesso!")
+        setAlertSeverity("success")
+        setOpenSnackbar(true)
+        setEditDialogOpen(false)
+      } else {
+        throw new Error(data.message || "Erro ao editar atividade.")
+      }
+    } catch (error) {
+      setAlertMessage("Erro ao editar atividade: " + error.message)
+      setAlertSeverity("error")
+      setOpenSnackbar(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEditDialogClose = () => {
+    setEditDialogOpen(false)
+    setEditActivity(null)
   }
 
   // Retorna o ícone e chip correspondente ao status
@@ -366,10 +435,27 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
           <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
           Ver detalhes
         </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
+        <MenuItem
+          onClick={() => {
+            handleEditClick();
+            handleMenuClose();
+          }}
+          disabled={(() => {
+            const activity = activities.find((a) => a.id === selectedActivityId)
+            return activity?.status === "aprovada"
+          })()}
+        >
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
           Editar
         </MenuItem>
+      {/* Modal de edição de atividade */}
+      <EditActivityModal
+        open={editDialogOpen}
+        onClose={() => { setEditDialogOpen(false); setEditActivity(null); }}
+        activity={editActivity}
+        onSave={handleEditSave}
+        loading={loading}
+      />
         <Divider />
         <MenuItem onClick={() => handleDeleteActivity(selectedActivityId)} sx={{ color: "error.main" }}>
           <DeleteIcon fontSize="small" sx={{ mr: 1 }} />

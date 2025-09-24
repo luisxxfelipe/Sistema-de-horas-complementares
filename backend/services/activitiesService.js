@@ -16,7 +16,37 @@ async function getAllActivitiesByUser(userId) {
 }
 
 async function createActivity(activity) {
-  return await supabase.from('activities').insert([activity]);
+  // Buscar aproveitamento e limite do grupo
+  const { data: groupData, error: groupError } = await supabase
+    .from('activity_types')
+    .select('aproveitamento, hours')
+    .eq('id', activity.tipo_id)
+    .single();
+  if (groupError || !groupData) {
+    return { error: groupError || { message: 'Grupo não encontrado' } };
+  }
+  const aproveitamento = groupData.aproveitamento || 1;
+  const limiteGrupo = groupData.hours || 0;
+
+  // Soma horas já registradas pelo usuário nesse grupo
+  const { data: atividadesDoGrupo, error: errorAtividades } = await supabase
+    .from('activities')
+    .select('horas')
+    .eq('user_id', activity.user_id)
+    .eq('tipo_id', activity.tipo_id);
+  if (errorAtividades) {
+    return { error: errorAtividades };
+  }
+  const horasJaRegistradas = (atividadesDoGrupo || []).reduce((sum, a) => sum + (parseFloat(a.horas) || 0), 0);
+
+  // Calcula horas aproveitadas da nova atividade
+  let horasAproveitadas = (activity.horas || 0) * aproveitamento;
+  // Se exceder o limite, ajusta para não ultrapassar
+  if (horasJaRegistradas + horasAproveitadas > limiteGrupo) {
+    horasAproveitadas = Math.max(0, limiteGrupo - horasJaRegistradas);
+  }
+  const activityToSave = { ...activity, horas: horasAproveitadas };
+  return await supabase.from('activities').insert([activityToSave]);
 }
 
 async function updateActivity(id, updates) {

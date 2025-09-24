@@ -1,5 +1,3 @@
-// API para dados do usuário (perfil, preferências, avatar)
-
 export async function getUserProfile(token) {
   const API_URL = process.env.REACT_APP_API_URL;
   const response = await fetch(`${API_URL}/api/auth/me`, {
@@ -57,6 +55,24 @@ export async function uploadAvatar(file, token) {
       'Authorization': `Bearer ${token}`
     },
     body: formData
+  });
+  return response.json();
+}
+
+export async function getUserPreferences(token) {
+  const API_URL = process.env.REACT_APP_API_URL;
+  const response = await fetch(`${API_URL}/api/users/me/preferences`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+}
+
+export async function getUserLoginLogs(token) {
+  const API_URL = process.env.REACT_APP_API_URL;
+  const response = await fetch(`${API_URL}/api/users/me/login-logs`, {
+    headers: { 'Authorization': `Bearer ${token}` }
   });
   return response.json();
 }
