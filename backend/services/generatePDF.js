@@ -12,6 +12,22 @@ const fonts = {
 const printer = new PdfPrinter(fonts);
 const supabase = require("../services/supabase");
 
+// Função para formatar horas decimais
+function formatDecimalHours(decimalHours) {
+  if (!decimalHours || decimalHours === 0) return "0h 0min";
+  
+  const hours = Math.floor(decimalHours);
+  const minutes = Math.round((decimalHours - hours) * 60);
+  
+  if (hours === 0) {
+    return `${minutes}min`;
+  } else if (minutes === 0) {
+    return `${hours}h`;
+  } else {
+    return `${hours}h ${minutes}min`;
+  }
+}
+
 async function generatePDF(userData, activities, tipoAtividade) {
   const titulo =
     tipoAtividade === "extensao"
@@ -44,10 +60,44 @@ async function generatePDF(userData, activities, tipoAtividade) {
       },
       { text: "CURSO DE ENGENHARIA DE COMPUTAÇÃO", style: "subheader" },
       { text: titulo, style: "title" },
-      { text: "\nEstudante: " + userData.nome, style: "text" },
-      { text: "Matrícula: " + userData.matricula, style: "text" },
-      { text: "Turno: " + userData.turno, style: "text" },
-      { text: "Ano/Semestre de Entrada: " + semestre, style: "text" },
+      { text: "\nEstudante: " + (userData?.nome || "Nome não informado"), style: "text" },
+      { text: "Matrícula: " + (userData?.matricula || "Matrícula não informada"), style: "text" },
+      { text: "Turno: " + (userData?.turno || "Turno não informado"), style: "text" },
+      { text: "Ano/Semestre de Entrada: " + (userData?.semestre_entrada || "Semestre não informado"), style: "text" },
+
+      { text: "\n\n", style: "text" },
+
+      // Atividades de Extensão ou Complementares
+      {
+        text:
+          tipoAtividade === "extensao"
+            ? "Atividades de Extensão (A)"
+            : "Atividades de Ensino (B)",
+        style: "sectionHeader",
+      },
+      {
+        table: {
+          headerRows: 1,
+          widths: ["50%", "25%", "25%"],
+          body: [
+            [
+              { text: "Atividade", style: "tableHeader" },
+              { text: "Quantidade", style: "tableHeader" },
+              { text: "*Total", style: "tableHeader" },
+            ],
+            ...activities.map((act, index) => [
+              activityTypes[index] || "Atividade não definida", // Atividade
+              formatDecimalHours(act.horas || 0), // Quantidade
+              formatDecimalHours(act.horas || 0), // Total
+            ]),
+          ],
+        },
+      },
+
+      { 
+        text: `Subtotal: ${formatDecimalHours(activities.reduce((sum, act) => sum + (act.horas || 0), 0))} (${tipoAtividade === "extensao" ? "405h" : "150h"})`, 
+        style: "subtotal" 
+      },
 
       { text: "\n\n", style: "text" },
 
@@ -76,37 +126,6 @@ async function generatePDF(userData, activities, tipoAtividade) {
         },
         layout: "noBorders", // Remove bordas da tabela
       },
-
-      { text: "\n\n", style: "text" },
-
-      // Atividades de Extensão ou Complementares
-      {
-        text:
-          tipoAtividade === "extensao"
-            ? "Atividades de Extensão (A)"
-            : "Atividades de Ensino (B)",
-        style: "sectionHeader",
-      },
-      {
-        table: {
-          headerRows: 1,
-          widths: ["50%", "25%", "25%"],
-          body: [
-            [
-              { text: "Atividade", style: "tableHeader" },
-              { text: "Quantidade", style: "tableHeader" },
-              { text: "*Total", style: "tableHeader" },
-            ],
-            ...activities.map((act, index) => [
-              activityTypes[index] || "Atividade não definida", // Atividade
-              act.horas || 0, // Quantidade
-              act.horas || 0, // Total
-            ]),
-          ],
-        },
-      },
-
-      { text: "Subtotal (máximo 90h)", style: "subtotal" },
     ],
     styles: {
       header: { fontSize: 14, bold: true, alignment: "center" },

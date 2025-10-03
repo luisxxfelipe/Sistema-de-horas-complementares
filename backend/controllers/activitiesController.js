@@ -4,7 +4,17 @@ const activitiesService = require('../services/activitiesService');
 exports.getAll = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { data, error } = await activitiesService.getAllActivitiesByUser(userId);
+    const userRole = req.user.role;
+    
+    let data, error;
+    
+    // Se for admin, busca todas as atividades; se não, só as do usuário
+    if (userRole === 'admin') {
+      ({ data, error } = await activitiesService.getAllActivitiesForAdmin());
+    } else {
+      ({ data, error } = await activitiesService.getAllActivitiesByUser(userId));
+    }
+    
     if (error) return res.status(400).json({ message: error.message });
     res.json(data);
   } catch (error) {

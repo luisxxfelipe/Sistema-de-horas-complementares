@@ -26,3 +26,13 @@ export async function getMe(token) {
   });
   return response.json();
 }
+
+export async function forgotPassword(email) {
+  const API_URL = process.env.REACT_APP_API_URL;
+  const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  return response.json();
+}

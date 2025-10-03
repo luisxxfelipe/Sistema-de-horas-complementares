@@ -19,6 +19,32 @@ async function updateUserPreferences(userId, preferences) {
   return true;
 }
 
+async function updateUserProfile(userId, updates) {
+  // Campos permitidos para atualização
+  const allowedFields = ['nome', 'phone'];
+  
+  // Filtrar apenas campos permitidos
+  const filteredUpdates = {};
+  Object.keys(updates).forEach(key => {
+    if (allowedFields.includes(key)) {
+      filteredUpdates[key] = updates[key];
+    }
+  });
+
+  if (Object.keys(filteredUpdates).length === 0) {
+    return { error: { message: 'Nenhum campo válido para atualizar' } };
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .update(filteredUpdates)
+    .eq('id', userId)
+    .select();
+
+  if (error) return { error };
+  return { data };
+}
+
 async function getUserLoginLogs(userId) {
   const { data, error } = await supabase
     .from('login_logs')
@@ -33,5 +59,6 @@ async function getUserLoginLogs(userId) {
 module.exports = {
   getUserPreferences,
   updateUserPreferences,
+  updateUserProfile,
   getUserLoginLogs,
 };

@@ -19,6 +19,10 @@ const MainContent = styled(Box)(({ theme }) => ({
   minHeight: "100vh",
   display: "flex",
   flexDirection: "column",
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2),
+    paddingTop: theme.spacing(10), // Compensa a AppBar no mobile
+  },
 }))
 
 const PageHeader = styled(Box)(({ theme }) => ({

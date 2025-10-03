@@ -3,12 +3,15 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import RegisterActivity from "./pages/RegisterActivity";
 import Profile from "./pages/Profile";
 import AdminPanel from "./pages/AdminPanel";
 import { AuthProvider } from "./context/AuthContext";
 import AdminRoute from "./routes/AdminRoute";
+import StudentRoute from "./routes/StudentRoute";
 import { useAuth } from "./hooks/useAuth";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
@@ -26,22 +29,24 @@ const Root = () => (
       <Routes>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Rotas para alunos */}
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute>
+            <StudentRoute>
               <Dashboard />
-            </PrivateRoute>
+            </StudentRoute>
           }
         />
         <Route
           path="/register-activity"
           element={
-            <PrivateRoute>
+            <StudentRoute>
               <RegisterActivity />
-            </PrivateRoute>
+            </StudentRoute>
           }
         />
 

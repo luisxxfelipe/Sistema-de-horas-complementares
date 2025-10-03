@@ -109,3 +109,25 @@ exports.me = async (req, res) => {
       });
   }
 };
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Detectar automaticamente a URL baseada no ambiente
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://horas-complementares.vercel.app'
+      : 'http://localhost:3000';
+    
+    const redirectUrl = `${baseUrl}/reset-password`;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl
+    });
+    
+    if (error) return res.status(400).json({ message: error.message });
+    res.json({ success: true, message: 'Email de recuperação enviado com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro interno no envio de email', error: error.message });
+  }
+};

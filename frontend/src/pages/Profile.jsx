@@ -201,10 +201,10 @@ const Profile = () => {
         nome: userData.nome,
         phone: userData.phone,
       }, token);
-      if (result && !result.message) {
+      if (result && result.success) {
         setSnackbar({
           open: true,
-          message: "Perfil atualizado com sucesso!",
+          message: result.message || "Perfil atualizado com sucesso!",
           severity: "success",
         });
         setEditMode(false);

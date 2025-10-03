@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getActivities, updateActivity } from "../api/activities";
+import { formatDecimalHours } from "../lib/hoursFormatter";
 import {
   Box,
   Typography,
@@ -53,7 +54,12 @@ const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   borderRadius: 12,
   boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
   overflow: "hidden",
+  overflowX: "auto", // Permite scroll horizontal no mobile
   marginBottom: theme.spacing(4),
+  width: "100%",
+  "& .MuiTable-root": {
+    minWidth: 900, // Define largura mínima da tabela
+  },
 }));
 
 const StyledTableHead = styled(TableHead)(({ theme }) => ({
@@ -343,7 +349,14 @@ const SecretariaDashboard = () => {
           minHeight: "100vh",
         }}
       >
-        <Box sx={{ p: 4 }}>
+        {/* Toolbar para compensar AppBar no mobile */}
+        <Box sx={{ display: { xs: "block", sm: "none" }, height: 64 }} />
+        
+        <Box sx={{ 
+          p: { xs: 2, sm: 4 }, // Padding responsivo
+          width: "100%",
+          maxWidth: "100%", // Garante que não extrapole a tela
+        }}>
           <Typography
             variant="h4"
             fontWeight="bold"
@@ -653,22 +666,22 @@ const SecretariaDashboard = () => {
                             <PersonIcon fontSize="small" />
                           </Avatar>
                           <Typography variant="body2">
-                            {activity.users.nome}
+                            {activity.users?.nome || "Nome não disponível"}
                           </Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Chip
                           icon={<SchoolIcon />}
-                          label={activity.users.matricula}
+                          label={activity.users?.matricula || "N/A"}
                           size="small"
                           variant="outlined"
                         />
                       </TableCell>
-                      <TableCell>{activity.activity_types.nome}</TableCell>
+                      <TableCell>{activity.activity_types?.nome || "Tipo não disponível"}</TableCell>
                       <TableCell>
                         <Chip
-                          label={`${activity.horas} horas`}
+                          label={formatDecimalHours(activity.horas)}
                           size="small"
                           sx={{
                             backgroundColor: "rgba(60, 97, 120, 0.1)",
@@ -777,7 +790,7 @@ const SecretariaDashboard = () => {
                     Horas
                   </Typography>
                   <Typography variant="body1">
-                    {selectedActivity.horas} horas
+                    {formatDecimalHours(selectedActivity.horas)}
                   </Typography>
                 </Grid>
 

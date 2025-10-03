@@ -310,10 +310,9 @@ const Signup = () => {
 
     try {
       const data = await signup(userData);
-      if (data && data.token) {
-        localStorage.setItem("token", data.token);
-        alert("Conta criada com sucesso!");
-        navigate("/dashboard");
+      if (data && data.success) {
+        alert("Conta criada com sucesso! Faça login para acessar o sistema.");
+        navigate("/login");
       } else {
         throw new Error(data.message || "Erro ao criar usuário.");
       }

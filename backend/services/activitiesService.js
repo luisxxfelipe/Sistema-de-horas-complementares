@@ -3,7 +3,11 @@ const supabase = require('./supabase');
 async function getAllActivitiesByUser(userId) {
   const { data, error } = await supabase
     .from('activities')
-    .select(`*, activity_types:tipo_id (nome, categories:categoria_id (nome))`)
+    .select(`
+      *, 
+      activity_types:tipo_id (nome, categories:categoria_id (nome)),
+      users:user_id (nome, matricula, email)
+    `)
     .eq('user_id', userId);
   if (error) return { data: null, error };
   // Mapear para retornar categoria e grupo como string (nome)
@@ -57,8 +61,31 @@ async function removeActivity(id) {
   return await supabase.from('activities').delete().eq('id', id);
 }
 
+// Nova função para admin buscar todas as atividades
+async function getAllActivitiesForAdmin() {
+  const { data, error } = await supabase
+    .from('activities')
+    .select(`
+      *, 
+      activity_types:tipo_id (nome, categories:categoria_id (nome)),
+      users:user_id (nome, matricula, email)
+    `)
+    .order('created_at', { ascending: false });
+  
+  if (error) return { data: null, error };
+  
+  // Mapear para retornar categoria e grupo como string (nome)
+  const mapped = data.map((item) => ({
+    ...item,
+    categoria: item.activity_types?.categories?.nome || "Não especificado",
+    grupo: item.activity_types?.nome || "Não especificado",
+  }));
+  return { data: mapped, error: null };
+}
+
 module.exports = {
   getAllActivitiesByUser,
+  getAllActivitiesForAdmin,
   createActivity,
   updateActivity,
   removeActivity,

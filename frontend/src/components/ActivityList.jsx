@@ -5,6 +5,7 @@ import { supabase } from "../supabase"
 import EditActivityModal from "./EditActivityModal"
 import { generatePDF as generatePDFAPI } from "../api/pdf"
 import { deleteActivity, updateActivity } from "../api/activities"
+import { formatDecimalHours } from "../lib/hoursFormatter"
 
 import {
   Table,
@@ -30,6 +31,11 @@ import {
   Backdrop,
   CircularProgress,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Toolbar,
 } from "@mui/material"
 
 import {
@@ -55,6 +61,8 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
   const [selectedActivityId, setSelectedActivityId] = useState(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editActivity, setEditActivity] = useState(null)
+  const [commentDialogOpen, setCommentDialogOpen] = useState(false)
+  const [selectedComment, setSelectedComment] = useState("")
 
   // Manipuladores de menu
   const handleMenuOpen = (event, activityId) => {
@@ -79,6 +87,16 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
   const handleMenuClose = () => {
     setMenuAnchorEl(null)
     setSelectedActivityId(null)
+  }
+
+  const handleCommentView = (comment) => {
+    setSelectedComment(comment)
+    setCommentDialogOpen(true)
+  }
+
+  const handleCommentDialogClose = () => {
+    setCommentDialogOpen(false)
+    setSelectedComment("")
   }
 
 
@@ -233,22 +251,23 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
       const token = localStorage.getItem("token")
       if (!token) throw new Error("Usuário não autenticado.")
 
-      // Busca os dados do usuário do contexto global (AuthContext) ou de props, se necessário
-      // Aqui, para simplificação, vamos assumir que userData está disponível via localStorage ou contexto
-      const userData = JSON.parse(localStorage.getItem("userData")) || {}
+      // Buscar dados do usuário da API
+      const { getMe } = await import("../api/auth");
+      const userData = await getMe(token);
+      
+      if (!userData || userData.message) {
+        throw new Error("Erro ao buscar dados do usuário");
+      }
 
-      // Filtra atividades conforme tipo
+      // Filtra atividades conforme tipo e apenas as aprovadas
       const filteredActivities = activities.filter((activity) => {
+        // Só inclui atividades aprovadas no PDF
+        if (activity.status !== "Aprovada") return false
+        
         if (tipoAtividade === "extensao") {
-          return (
-            activity.categoria?.toLowerCase().includes("extensão") ||
-            activity.grupo?.toLowerCase().includes("extensão")
-          )
+          return activity.categoria === "Atividades de Extensão"
         } else {
-          return (
-            !activity.categoria?.toLowerCase().includes("extensão") &&
-            !activity.grupo?.toLowerCase().includes("extensão")
-          )
+          return activity.categoria?.includes("(Complementar)")
         }
       })
 
@@ -292,6 +311,8 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
 
   return (
     <div>
+      {/* Toolbar para compensar AppBar no mobile */}
+      <Toolbar sx={{ display: { xs: "block", sm: "none" } }} />
       {!simplified && (
         <>
           {/* Barra de pesquisa */}
@@ -368,6 +389,11 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
           boxShadow: 2,
           borderRadius: 2,
           overflow: "hidden",
+          overflowX: "auto", // Permite scroll horizontal no mobile
+          width: "100%",
+          "& .MuiTable-root": {
+            minWidth: 800, // Define largura mínima da tabela
+          },
         }}
       >
         <Table>
@@ -401,14 +427,25 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
                   </TableCell>
                   <TableCell>{activity.categoria}</TableCell>
                   <TableCell>{activity.grupo}</TableCell>
-                  <TableCell>{new Intl.NumberFormat("pt-BR").format(activity.horas)} horas</TableCell>
+                  <TableCell>{formatDecimalHours(activity.horas)}</TableCell>
                   <TableCell>{activity.externa}</TableCell>
                   <TableCell>{getStatusChip(activity.status)}</TableCell>
                   {!simplified && (
-                    <TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}>
-                      <Typography variant="body2" sx={{ color: "#555" }}>
-                        {activity.comentario || "Sem comentário"}
-                      </Typography>
+                    <TableCell sx={{ textAlign: "center" }}>
+                      {activity.comentario && activity.comentario.trim() !== "" ? (
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleCommentView(activity.comentario)}
+                          sx={{ padding: 0.5 }}
+                          title="Ver comentário"
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      ) : (
+                        <Typography variant="body2" sx={{ color: "#999", fontStyle: "italic" }}>
+                          -
+                        </Typography>
+                      )}
                     </TableCell>
                   )}
                   <TableCell align="right">
@@ -524,6 +561,26 @@ const ActivityList = ({ activities, setActivities, simplified = false }) => {
           </Box>
         </>
       )}
+
+      {/* Modal de Comentários */}
+      <Dialog 
+        open={commentDialogOpen} 
+        onClose={handleCommentDialogClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Comentário da Atividade</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mt: 1, lineHeight: 1.6 }}>
+            {selectedComment}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCommentDialogClose} color="primary">
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Notificação ao Exportar CSV e Erros Gerais */}
       <Snackbar

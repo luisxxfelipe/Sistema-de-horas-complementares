@@ -14,33 +14,55 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password"];
+    const isPublicRoute = publicRoutes.includes(location.pathname);
+    
     const fetchUser = async () => {
       if (!token) {
         setUser(null);
         setRole(null);
         setLoading(false);
-        if (location.pathname !== "/login" && location.pathname !== "/signup") {
+        if (!isPublicRoute) {
           navigate("/login");
         }
         return;
       }
+      
+      // Se estiver em rota pública e tiver token, verifica se é válido
+      if (isPublicRoute) {
+        try {
+          const data = await getMe(token);
+          if (data && !data.message) {
+            setUser(data);
+            setRole(data.role);
+            // Redireciona para a página correta baseada no role
+            if (data.role === "admin") {
+              navigate("/admin-dashboard");
+            } else {
+              navigate("/dashboard");
+            }
+          }
+        } catch (error) {
+          // Token inválido, remove e continua na página pública
+          localStorage.removeItem("token");
+          setToken(null);
+        }
+        setLoading(false);
+        return;
+      }
+      
+      // Para rotas privadas, valida o token
       const data = await getMe(token);
       if (!data || data.message) {
         setUser(null);
         setRole(null);
         setLoading(false);
-        if (location.pathname !== "/login" && location.pathname !== "/signup") {
-          navigate("/login");
-        }
+        navigate("/login");
         return;
       }
       setUser(data);
       setRole(data.role);
       setLoading(false);
-      // Se estiver na tela de login, redireciona para dashboard
-      if (location.pathname === "/login" || location.pathname === "/signup") {
-        navigate("/dashboard");
-      }
     };
     fetchUser();
     // eslint-disable-next-line

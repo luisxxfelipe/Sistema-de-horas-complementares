@@ -1,6 +1,5 @@
-"use client";
-
 import { useState, useEffect, useMemo } from "react";
+import { formatDecimalHours } from "../lib/hoursFormatter";
 import {
   Box,
   Card,
@@ -99,11 +98,11 @@ const Reports = ({ activities }) => {
       filteredActivities.forEach((activity) => {
         const category = activity.categoria;
         categoryCount[category] = (categoryCount[category] || 0) + 1;
-        categoryHours[category] = (categoryHours[category] || 0) + activity.horas;
+        categoryHours[category] = Math.round(((categoryHours[category] || 0) + activity.horas) * 100) / 100;
       });
       const categoryChartData = Object.keys(categoryHours).map((category) => ({
         name: category,
-        horas: categoryHours[category],
+        horas: Math.round(categoryHours[category] * 100) / 100,
         atividades: categoryCount[category],
       }));
       const statusCount = {
@@ -120,9 +119,9 @@ const Reports = ({ activities }) => {
         const normalizedStatus = activity.status.toLowerCase();
         statusCount[normalizedStatus] = (statusCount[normalizedStatus] || 0) + 1;
         statusHours[normalizedStatus] =
-          (statusHours[normalizedStatus] || 0) + activity.horas;
+          Math.round(((statusHours[normalizedStatus] || 0) + activity.horas) * 100) / 100;
         statusHours[activity.status] =
-          (statusHours[activity.status] || 0) + activity.horas;
+          Math.round(((statusHours[activity.status] || 0) + activity.horas) * 100) / 100;
       });
       const statusChartData = Object.keys(statusCount).map((status) => {
         let label = "";
@@ -132,7 +131,7 @@ const Reports = ({ activities }) => {
         return {
           name: label,
           value: statusCount[status],
-          horas: statusHours[status],
+          horas: Math.round(statusHours[status] * 100) / 100,
           color: STATUS_COLORS[status],
         };
       });
@@ -163,10 +162,12 @@ const Reports = ({ activities }) => {
         }
       });
       const monthlyChartData = Object.values(monthlyActivityData);
-      const totalHours = filteredActivities.reduce(
-        (sum, activity) => sum + activity.horas,
-        0
-      );
+      const totalHours = Math.round(
+        filteredActivities.reduce(
+          (sum, activity) => sum + activity.horas,
+          0
+        ) * 100
+      ) / 100; // Arredonda para 2 casas decimais
       const externalCount = filteredActivities.filter(
         (activity) => activity.externa === "Sim"
       ).length;
@@ -274,7 +275,7 @@ const Reports = ({ activities }) => {
                   {activity.descricao}
                 </TableCell>
                 <TableCell>{activity.categoria}</TableCell>
-                <TableCell>{activity.horas}</TableCell>
+                <TableCell>{formatDecimalHours(activity.horas)}</TableCell>
                 <TableCell>
                   <Chip
                     size="small"

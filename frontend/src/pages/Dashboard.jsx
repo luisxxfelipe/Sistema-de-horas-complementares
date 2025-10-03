@@ -8,6 +8,7 @@ import Reports from "../components/Reports";
 import Toolbar from "@mui/material/Toolbar";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import { formatDecimalHours } from "../lib/hoursFormatter";
 import {
   Box,
   Container,
@@ -114,14 +115,14 @@ const Dashboard = () => {
   const metaExtensao = 405;
   const metaComplementares = 150;
   const totalHorasExtensao = activities
-    .filter((a) => a.categoria === "Atividades de Extensão")
+    .filter((a) => a.categoria === "Atividades de Extensão" && a.status !== "Rejeitada")
     .reduce((sum, activity) => sum + activity.horas, 0);
   const totalHorasComplementares = activities
-    .filter((a) => a.categoria && a.categoria.includes("(Complementar)"))
+    .filter((a) => a.categoria && a.categoria.includes("(Complementar)") && a.status !== "Rejeitada")
     .reduce((sum, activity) => sum + activity.horas, 0);
-  const aprovadas = activities.filter((a) => a.status === "aprovada").length;
-  const pendentes = activities.filter((a) => a.status === "pendente").length;
-  const rejeitadas = activities.filter((a) => a.status === "rejeitada").length;
+  const aprovadas = activities.filter((a) => a.status === "Aprovada").length;
+  const pendentes = activities.filter((a) => a.status === "Pendente").length;
+  const rejeitadas = activities.filter((a) => a.status === "Rejeitada").length;
   const progressoExtensao = Math.min(
     Math.round((totalHorasExtensao / metaExtensao) * 100),
     100
@@ -147,7 +148,16 @@ const Dashboard = () => {
         {/* Empurra o conteúdo para baixo do AppBar no mobile */}
         <Toolbar sx={{ display: { xs: "block", sm: "none" } }} />
 
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Container 
+          maxWidth="lg" 
+          sx={{ 
+            mt: 4, 
+            mb: 4,
+            px: { xs: 2, sm: 3 }, // Padding responsivo para mobile
+            width: "100%",
+            maxWidth: { xs: "100%", lg: "lg" }, // Usa toda largura no mobile
+          }}
+        >
           {/* Cabeçalho da página */}
           <Box
             sx={{
@@ -205,7 +215,7 @@ const Dashboard = () => {
                         fontWeight="bold"
                         color={totalHorasExtensao >= metaExtensao ? "#43a047" : "#f57c00"}
                       >
-                        {Number(totalHorasExtensao).toFixed(2)}
+                        {formatDecimalHours(totalHorasExtensao)}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Meta: {metaExtensao} horas
@@ -242,7 +252,7 @@ const Dashboard = () => {
                         fontWeight="bold"
                         color={totalHorasComplementares >= metaComplementares ? "#43a047" : "#f57c00"}
                       >
-                        {Number(totalHorasComplementares).toFixed(2)}
+                        {formatDecimalHours(totalHorasComplementares)}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Meta: {metaComplementares} horas

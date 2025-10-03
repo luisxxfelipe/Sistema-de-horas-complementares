@@ -1,3 +1,19 @@
+const usersService = require('../services/usersService');
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const updates = req.body;
+    const result = await usersService.updateUserProfile(userId, updates);
+    if (result.error) {
+      return res.status(400).json({ message: result.error.message });
+    }
+    res.json({ success: true, message: 'Perfil atualizado com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro interno ao atualizar perfil', error: error.message });
+  }
+};
+
 exports.getLoginLogs = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -7,7 +23,6 @@ exports.getLoginLogs = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-const usersService = require('../services/usersService');
 
 exports.getPreferences = async (req, res) => {
   try {
