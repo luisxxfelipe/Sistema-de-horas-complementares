@@ -1,1 +1,15 @@
-{}
+{
+  "name": "sistema-horas-complementares",
+  "version": "1.0.0",
+  "description": "Sistema de Horas Complementares - UEMG",
+  "main": "backend/app.js",
+  "scripts": {
+    "start": "cd backend && node app.js",
+    "dev": "cd backend && npm run dev",
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install"
+  },
+  "keywords": ["horas-complementares", "uemg", "sistema"],
+  "author": "",
+  "license": "ISC"
+}
