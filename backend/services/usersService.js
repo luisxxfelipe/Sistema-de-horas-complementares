@@ -56,9 +56,21 @@ async function getUserLoginLogs(userId) {
   return data;
 }
 
+async function updateUserAvatar(userId, url_profile) {
+  const { data, error } = await supabase
+    .from('users')
+    .update({ url_profile })
+    .eq('id', userId)
+    .select();
+
+  if (error) return { error };
+  return { data };
+}
+
 module.exports = {
   getUserPreferences,
   updateUserPreferences,
   updateUserProfile,
   getUserLoginLogs,
+  updateUserAvatar,
 };

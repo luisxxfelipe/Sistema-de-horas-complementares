@@ -154,4 +154,46 @@ async function getUser() {
   }
 };
 
-module.exports = { signup, login, logout, getUser };
+// Função para buscar perfil completo do usuário
+async function getUserProfile(userId) {
+  try {
+    // Buscar dados do usuário
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select(
+        "id, nome, email, role, matricula, turno, semestre_entrada, created_at, last_login, url_profile, phone"
+      )
+      .eq("id", userId)
+      .single();
+      
+    if (userError) throw new Error(userError.message);
+    
+    // Buscar cursos do usuário
+    const { data: userCourses, error: coursesError } = await supabase
+      .from("user_courses")
+      .select(`
+        courses (
+          nome
+        )
+      `)
+      .eq("user_id", userId);
+    
+    // Adicionar cursos aos dados do usuário
+    const cursos = userCourses && !coursesError 
+      ? userCourses.map(uc => uc.courses.nome) 
+      : [];
+    
+    return {
+      success: true,
+      data: {
+        ...userData,
+        cursos: cursos
+      }
+    };
+  } catch (error) {
+    console.error("Erro ao buscar perfil do usuário:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+module.exports = { signup, login, logout, getUser, getUserProfile };

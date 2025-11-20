@@ -6,8 +6,6 @@ exports.updatePassword = async (req, res) => {
   try {
     const userId = req.user.id;
     const { currentPassword, newPassword } = req.body;
-    // Opcional: validar senha atual (não obrigatório no Supabase, mas recomendado)
-    // Tenta login com a senha atual
     const { success } = await require("../services/authService").login(
       req.user.email,
       currentPassword
@@ -91,15 +89,13 @@ exports.signup = async (req, res) => {
 exports.me = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { data, error } = await supabase
-      .from("users")
-      .select(
-        "id, nome, email, role, matricula, turno, semestre_entrada, created_at, last_login, url_profile, phone"
-      )
-      .eq("id", userId)
-      .single();
-    if (error) return res.status(400).json({ message: error.message });
-    res.json(data);
+    const result = await authService.getUserProfile(userId);
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(400).json({ message: result.message });
+    }
   } catch (error) {
     res
       .status(500)

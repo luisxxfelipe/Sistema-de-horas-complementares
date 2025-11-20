@@ -8,6 +8,7 @@ router.put('/me', authMiddleware, usersController.updateProfile);
 router.get('/me/preferences', authMiddleware, usersController.getPreferences);
 router.put('/me/preferences', authMiddleware, usersController.updatePreferences);
 router.get('/me/login-logs', authMiddleware, usersController.getLoginLogs);
+router.post('/me/avatar', authMiddleware, usersController.updateAvatar);
 
 router.put('/me/password', authMiddleware, authController.updatePassword);
 

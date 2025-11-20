@@ -43,3 +43,23 @@ exports.updatePreferences = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+exports.updateAvatar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { url_profile } = req.body;
+    
+    if (!url_profile) {
+      return res.status(400).json({ message: 'URL da imagem é obrigatória' });
+    }
+    
+    const result = await usersService.updateUserAvatar(userId, url_profile);
+    if (result.error) {
+      return res.status(400).json({ message: result.error.message });
+    }
+    
+    res.json({ success: true, url_profile: url_profile, message: 'Avatar atualizado com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro interno ao atualizar avatar', error: error.message });
+  }
+};
